@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.bash import BashOperator
-from airflow.sensors.filesystem import FileSensor
 from airflow.operators.dummy import DummyOperator
 from airflow.hooks.postgres_hook import PostgresHook
 from airflow.models import Variable
@@ -416,19 +415,15 @@ def get_unprocessed_files(**context):
         # Créer un fichier de test si aucun fichier n'existe
         test_file_path = os.path.join(input_dir, 'sample_input.txt')
         sample_text = """
-        DNA DATA SYMPHONIA - Test Pipeline avec FileSensor et Base de Données
-        
-        Ceci est un texte de test pour démontrer le pipeline de traitement
-        avec détection automatique de fichiers et tracking en base de données.
-        
-        Le système calcule le hash MD5 de chaque fichier et vérifie
-        s'il a déjà été traité pour éviter les doublons.
-        
-        Cette approche permet de traiter de gros volumes de données
-        de manière efficace et automatisée sans retraitement.
-        
-        Le checksum MD5 sera calculé pour chaque chunk afin de garantir
-        l'intégrité des données tout au long du processus.
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris dignissim, 
+        erat nec tristique cursus, diam quam varius nisi, non lobortis libero leo 
+        tincidunt est. Aliquam blandit erat id elit ornare, vitae rutrum risus 
+        ultricies. Suspendisse potenti. Mauris at mauris ac orci euismod vestibulum.
+        Donec cursus auctor nisi pharetra imperdiet. In ac egestas turpis, commodo 
+        tincidunt lacus. Quisque nec justo in magna rhoncus eleifend. Aliquam 
+        suscipit sapien sed interdum molestie. Nullam non velit iaculis, elementum
+        est at, sagittis eros. Nam ut mattis lacus. Duis auctor condimentum nisi, 
+        nec pretium nunc fringilla ut. Donec eget condimentum ipsum.
         """
         with open(test_file_path, 'w', encoding='utf-8') as f:
             f.write(sample_text.strip())
