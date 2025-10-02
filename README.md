@@ -153,10 +153,10 @@ Configurez ces variables via l'interface web Airflow (Admin → Variables) :
 
 | Variable | Description | Valeur par Défaut | Impact |
 |----------|-------------|-------------------|---------|
-| `dna_input_directory` | Répertoire d'entrée des fichiers | `/opt/airflow/data/input` | Change le répertoire surveillé |
-| `dna_chunk_size` | Taille des segments (caractères) | `1000` | Affecte la granularité de segmentation |
-| `dna_max_retries` | Nombre maximum de tentatives | `3` | Contrôle la persistance en cas d'erreur |
-| `dna_circuit_breaker_threshold` | Seuil du circuit breaker | `5` | Protège contre les cascades d'échecs |
+| `input_directory` | Répertoire d'entrée des fichiers | `/opt/airflow/data/input` | Change le répertoire surveillé |
+| `chunk_size` | Taille des segments (caractères) | `1000` | Affecte la granularité de segmentation |
+| `max_retries` | Nombre maximum de tentatives | `3` | Contrôle la persistance en cas d'erreur |
+| `circuit_breaker_threshold` | Seuil du circuit breaker | `5` | Protège contre les cascades d'échecs |
 
 ### Configuration via Interface Web
 
@@ -168,10 +168,10 @@ Configurez ces variables via l'interface web Airflow (Admin → Variables) :
 ### Exemple de Configuration
 
 ```
-dna_input_directory = /opt/airflow/data/input
-dna_chunk_size = 1000
-dna_max_retries = 3
-dna_circuit_breaker_threshold = 5
+input_directory = /opt/airflow/data/input
+chunk_size = 1000
+max_retries = 3
+circuit_breaker_threshold = 5
 ```
 
 ### Répertoires

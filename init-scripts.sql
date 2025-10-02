@@ -20,7 +20,7 @@ CREATE INDEX IF NOT EXISTS idx_processed_files_status ON processed_files(status)
 CREATE INDEX IF NOT EXISTS idx_processed_files_processed_at ON processed_files(processed_at);
 
 -- Commentaire sur la table
-COMMENT ON TABLE processed_files IS 'Table de tracking des fichiers traités par le pipeline DNA DATA SYMPHONIA';
+COMMENT ON TABLE processed_files IS 'Table de tracking des fichiers traités par le pipeline';
 COMMENT ON COLUMN processed_files.file_hash IS 'Hash MD5 unique du fichier pour éviter les doublons';
 COMMENT ON COLUMN processed_files.file_path IS 'Chemin original du fichier traité';
 COMMENT ON COLUMN processed_files.status IS 'Statut du traitement: completed, failed, processing';
