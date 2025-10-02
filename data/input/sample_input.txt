@@ -1,0 +1,22 @@
+DNA DATA SYMPHONIA - Test Pipeline
+
+Ceci est un texte de test pour démontrer le pipeline de traitement.
+Le pipeline va segmenter ce texte en plusieurs chunks,
+vérifier l'intégrité de chaque segment,
+et reconstruire le texte original.
+
+Cette approche permet de traiter de gros volumes de données
+de manière efficace et fiable.
+
+Le checksum MD5 sera calculé pour chaque chunk afin de garantir
+l'intégrité des données tout au long du processus.
+
+Le pipeline Airflow implémente les étapes suivantes :
+1. Lecture du fichier texte d'entrée
+2. Segmentation en chunks de taille définie
+3. Vérification de l'intégrité avec checksum MD5
+4. Reconstruction du texte original
+5. Nettoyage des fichiers temporaires
+
+Cette solution démontre une approche robuste pour le traitement
+de données textuelles avec validation de l'intégrité.

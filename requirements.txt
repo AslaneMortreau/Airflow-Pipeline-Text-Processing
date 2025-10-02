@@ -1,0 +1,36 @@
+# Database connectors
+psycopg2-binary==2.9.9
+sqlalchemy==1.4.53
+
+# Additional useful packages
+pandas==2.1.4
+numpy==1.24.4
+requests==2.31.0
+python-dotenv==1.0.0
+
+# Cloud providers (uncomment as needed)
+# apache-airflow-providers-amazon==8.12.0
+# apache-airflow-providers-google==10.12.0
+# apache-airflow-providers-microsoft-azure==6.2.0
+
+# Data processing
+# apache-airflow-providers-postgres==5.7.2
+# apache-airflow-providers-mysql==3.7.0
+# apache-airflow-providers-sqlite==3.4.2
+
+# Monitoring and alerting
+# apache-airflow-providers-slack==8.4.0
+# apache-airflow-providers-telegram==3.2.0
+
+# File transfer
+# apache-airflow-providers-ftp==3.7.0
+# apache-airflow-providers-sftp==4.7.0
+
+# HTTP and API
+# apache-airflow-providers-http==4.7.0
+
+# Development and testing
+pytest==7.4.3
+pytest-cov==4.1.0
+black==23.11.0
+flake8==6.1.0
