@@ -96,7 +96,7 @@ DEAD_LETTER
 
 ### Services Docker
 
-- **Airflow Webserver** : Interface web (port 8080)
+- **Airflow Webserver** : Interface web (port 8081)
 - **Airflow Scheduler** : Planificateur des tâches
 - **Airflow Worker** : Exécuteur des tâches
 - **Airflow Triggerer** : Gestionnaire des déclencheurs
@@ -122,7 +122,7 @@ docker-compose ps
 
 ### Accès aux Services
 
-- **Interface Airflow** : http://localhost:8080
+- **Interface Airflow** : http://localhost:8081
 - **PostgreSQL** : localhost:5432 (user: airflow, password: airflow)
 - **Redis** : localhost:6379
 
@@ -160,7 +160,7 @@ Configurez ces variables via l'interface web Airflow (Admin → Variables) :
 
 ### Configuration via Interface Web
 
-1. **Accéder à Airflow** : http://localhost:8080
+1. **Accéder à Airflow** : http://localhost:8081
 2. **Admin → Variables** : Gestion des variables
 3. **Créer/Modifier** : Ajouter ou modifier les valeurs
 4. **Redémarrage automatique** : Les changements sont pris en compte immédiatement
