@@ -1,0 +1,3 @@
+Troisième fichier de test pour les données d'entrée.
+Contenu de test avec des caractères spéciaux : éàçùñ
+Ligne 3 du fichier sample3.

@@ -126,6 +126,27 @@ docker-compose ps
 - **PostgreSQL** : localhost:5432 (user: airflow, password: airflow)
 - **Redis** : localhost:6379
 
+### Configuration de la Connexion PostgreSQL
+
+Après le démarrage des services, vous devez créer la connexion PostgreSQL dans Airflow :
+
+1. **Accéder à l'interface Airflow** : http://localhost:8081
+2. **Se connecter** : Utilisez les identifiants par défaut (airflow/airflow)
+3. **Aller dans Admin → Connections**
+4. **Créer une nouvelle connexion** avec les paramètres suivants :
+
+| Paramètre | Valeur |
+|-----------|--------|
+| **Connection Id** | `postgres_default` |
+| **Connection Type** | `Postgres` |
+| **Host** | `postgres` |
+| **Schema** | `airflow` |
+| **Login** | `airflow` |
+| **Password** | `airflow` |
+| **Port** | `5432` |
+
+5. **Sauvegarder** la connexion
+
 ## Structure du Projet
 
 ```
