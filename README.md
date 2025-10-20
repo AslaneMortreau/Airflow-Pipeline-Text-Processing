@@ -8,6 +8,9 @@ Ce projet est une infrastructure complète de traitement de texte basée sur Apa
 
 - **Traitement Automatique** : Exécution toutes les 30 minutes
 - **Détection Intelligente** : Surveillance continue du répertoire d'entrée
+- **Encodage ADN (Goldman)** : Conversion octets → trits (base 3) → nucléotides en évitant les homopolymères
+- **Chunking intelligent** : Découpage en octets (taille max) en respectant les frontières de mots et UTF‑8
+- **Codes correcteurs** : Reed–Solomon appliqué par chunk
 - **Gestion d'Erreurs Avancée** : Retry avec backoff exponentiel et circuit breaker
 - **Tracking Complet** : Base de données PostgreSQL pour éviter les doublons
 - **Configuration Dynamique** : Variables Airflow configurables via l'interface web
@@ -26,16 +29,16 @@ Ce projet est une infrastructure complète de traitement de texte basée sur Apa
 - **Tracking MD5** : Évite le retraitement des fichiers déjà traités
 
 ### Phase 3 : Traitement des Fichiers
-Le traitement suit un processus en 8 étapes :
+Le traitement suit un processus en 8 étapes (avec encodage ADN) :
 
 1. **Lecture du Fichier** : Chargement du contenu texte (UTF-8)
 2. **Calcul du Hash Initial** : Génération du checksum MD5 original
-3. **Segmentation du Texte** : Découpage en chunks configurables
-4. **Calcul des Hashs des Chunks** : Vérification d'intégrité par segment
-5. **Sauvegarde des Chunks** : Stockage temporaire des segments
-6. **Vérification des Hashs** : Validation de l'intégrité des segments
-7. **Reconstruction du Texte** : Assemblage des chunks en fichier final
-8. **Comparaison Finale** : Validation que le texte reconstruit = texte original
+3. **Segmentation mot‑aware** : Découpage en chunks d'octets (taille max) sans couper les mots ni les code points UTF‑8
+4. **Encodage ADN (Goldman)** : octets → trits (base 3) → nucléotides en évitant les homopolymères
+5. **Correction d'erreurs** : Ajout de codes Reed–Solomon par chunk
+6. **Calcul des Hashs des Chunks** : Vérification d'intégrité par segment (checksum des octets)
+7. **Sauvegarde/Validation** : Sauvegarde des séquences ADN et métadonnées, validation des chunks
+8. **Reconstruction du Texte** : ADN → trits → octets → texte puis comparaison finale (checksum)
 
 ### Phase 4 : Gestion des Résultats
 - **Succès** : Fichier déplacé vers `/output/` avec métadonnées en base
@@ -152,7 +155,7 @@ Après le démarrage des services, vous devez créer la connexion PostgreSQL dan
 ```
 Airflow-Pipeline-Text-Processing/
 ├── dags/
-│   └── dag.py          # Pipeline principal
+│   └── dag.py                  # Pipeline principal (importe utils depuis plugins)
 ├── data/
 │   ├── input/                  # Répertoire d'entrée des fichiers
 │   ├── output/                 # Répertoire de sortie
@@ -160,7 +163,11 @@ Airflow-Pipeline-Text-Processing/
 │   └── dead_letter/           # Fichiers en échec
 ├── docker-compose.yml          # Configuration Docker
 ├── Dockerfile                  # Image Airflow personnalisée
-├── requirements.txt            # Dépendances Python
+├── requirements.txt            # Dépendances Python (tests locaux)
+├── plugins/
+│   └── utils/
+│       ├── __init__.py
+│       └── dna_encoding.py     # Encodeur Goldman + Reed–Solomon (chargé par Airflow)
 ├── init-scripts.sql           # Script d'initialisation PostgreSQL
 ├── .gitignore                 # Fichiers à ignorer
 └── README.md                  # Ce fichier
@@ -178,6 +185,7 @@ Configurez ces variables via l'interface web Airflow (Admin → Variables) :
 | `chunk_size` | Taille des segments (caractères) | `1000` | Affecte la granularité de segmentation |
 | `max_retries` | Nombre maximum de tentatives | `3` | Contrôle la persistance en cas d'erreur |
 | `circuit_breaker_threshold` | Seuil du circuit breaker | `5` | Protège contre les cascades d'échecs |
+| `error_correction_symbols` | Symboles Reed–Solomon par chunk | `10` | Robustesse à l’erreur |
 
 ### Configuration via Interface Web
 

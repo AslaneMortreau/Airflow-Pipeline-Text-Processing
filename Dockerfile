@@ -36,6 +36,12 @@ ENV AIRFLOW__WEBSERVER__RBAC=True
 # Create necessary directories
 RUN mkdir -p /opt/airflow/dags /opt/airflow/logs /opt/airflow/plugins
 
+# Copy project code into image (including dags, plugins, utils)
+COPY dags/ /opt/airflow/dags/
+COPY plugins/ /opt/airflow/plugins/
+COPY utils/ /opt/airflow/plugins/utils/
+COPY data/ /opt/airflow/data/
+
 # Set proper permissions
 USER root
 RUN chown -R airflow:root /opt/airflow

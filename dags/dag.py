@@ -15,6 +15,10 @@ import random
 import logging
 from enum import Enum
 from dataclasses import dataclass
+import sys
+sys.path.append('/opt/airflow')
+sys.path.append('/opt/airflow/plugins')
+from utils.dna_encoding import DNAProcessor, GoldmanEncoder, DNAChunk
 
 # Définition des arguments par défaut
 default_args = {
@@ -29,12 +33,12 @@ default_args = {
 
 # Création du DAG
 dag = DAG(
-    'text_processing_pipeline',
+    'dna_text_processing_pipeline',
     default_args=default_args,
-    description='Pipeline de traitement de texte',
+    description='Pipeline de traitement de texte avec encodage ADN',
     schedule_interval=timedelta(minutes=30),  # Exécution toutes les 30 minutes
     catchup=False,
-    tags=['text-processing'],
+    tags=['text-processing', 'dna-encoding'],
 )
 
 # Configuration du pipeline
@@ -57,10 +61,18 @@ def get_input_dir():
 def get_chunk_size():
     """Récupère la taille des chunks depuis les variables Airflow"""
     try:
-        return int(Variable.get("chunk_size", default_var=100))
+        return int(Variable.get("chunk_size", default_var=1000))
     except Exception:
-        logger.warning("Variable chunk_size non trouvée, utilisation du défaut: 100")
-        return 100
+        logger.warning("Variable chunk_size non trouvée, utilisation du défaut: 1000")
+        return 1000
+
+def get_error_correction_symbols():
+    """Récupère le nombre de symboles de correction d'erreur depuis les variables Airflow"""
+    try:
+        return int(Variable.get("error_correction_symbols", default_var=10))
+    except Exception:
+        logger.warning("Variable error_correction_symbols non trouvée, utilisation du défaut: 10")
+        return 10
 
 def get_max_retries():
     """Récupère le nombre max de retry depuis les variables Airflow"""
@@ -478,7 +490,7 @@ def get_unprocessed_files(**context):
     }
 
 def process_single_file(file_info, **context):
-    """Traite un fichier individuel avec gestion d'erreurs avancée"""
+    """Traite un fichier individuel avec encodage ADN et gestion d'erreurs avancée"""
     # Initialiser les composants si nécessaire
     initialize_components()
     
@@ -487,7 +499,7 @@ def process_single_file(file_info, **context):
     file_size = file_info['file_size']
     filename = file_info['filename']
     
-    logger.info(f"Traitement du fichier: {filename} (hash: {file_hash[:8]}...)")
+    logger.info(f"Traitement du fichier ADN: {filename} (hash: {file_hash[:8]}...)")
     
     try:
         # Vérifier le circuit breaker
@@ -506,105 +518,105 @@ def process_single_file(file_info, **context):
         update_file_status(file_hash, ProcessingStatus.PROCESSING, **context)
         
         def _process_file():
-            """Fonction de traitement avec retry automatique"""
-            # Lire le fichier
-            with open(file_path, 'r', encoding='utf-8') as f:
-                content = f.read()
+            """Fonction de traitement ADN avec retry automatique"""
+            # Initialiser le processeur ADN
+            chunk_size = get_chunk_size()
+            error_correction_symbols = get_error_correction_symbols()
+            dna_processor = DNAProcessor(chunk_size, error_correction_symbols)
             
-            # Calculer le checksum initial
-            original_checksum = hashlib.md5(content.encode('utf-8')).hexdigest()
+            logger.info(f"Processeur ADN initialisé - Chunk size: {chunk_size}, Correction: {error_correction_symbols}")
             
-            logger.info(f"Fichier lu: {len(content)} caractères, checksum: {original_checksum[:8]}...")
+            # Traiter le fichier avec le pipeline ADN
+            dna_result = dna_processor.process_text_file(file_path)
             
-            # Créer le répertoire temporaire pour ce fichier
-            file_temp_dir = os.path.join(TEMP_DIR, f"file_{file_hash[:8]}")
+            if dna_result['status'] != 'success':
+                raise Exception(f"Échec du traitement ADN: {dna_result.get('error_message', 'Erreur inconnue')}")
+            
+            # Créer le répertoire temporaire pour sauvegarder les chunks ADN
+            file_temp_dir = os.path.join(TEMP_DIR, f"dna_file_{file_hash[:8]}")
             os.makedirs(file_temp_dir, exist_ok=True)
             
             try:
-
-                chunk_size = get_chunk_size()
+                # Sauvegarder les chunks ADN
+                dna_chunks = dna_result['dna_chunks']
+                chunk_files = []
                 
-                # Segmenter le texte
-                chunks = []
-                chunk_metadata = []
-                
-                for i in range(0, len(content), chunk_size):
-                    chunk = content[i:i + chunk_size]
-                    chunk_id = f"chunk_{i//chunk_size:03d}"
+                for chunk in dna_chunks:
+                    # Sauvegarder la séquence ADN
+                    dna_file = os.path.join(file_temp_dir, f"{chunk.chunk_id}.dna")
+                    with open(dna_file, 'w', encoding='utf-8') as f:
+                        f.write(chunk.dna_sequence)
                     
-                    # Calculer le checksum du chunk
-                    chunk_checksum = hashlib.md5(chunk.encode('utf-8')).hexdigest()
+                    # Sauvegarder les métadonnées du chunk
+                    metadata_file = os.path.join(file_temp_dir, f"{chunk.chunk_id}.meta.json")
+                    chunk_metadata = {
+                        'chunk_id': chunk.chunk_id,
+                        'index': chunk.index,
+                        'dna_sequence': chunk.dna_sequence,
+                        'original_binary': chunk.original_binary,
+                        'error_correction_code': chunk.error_correction_code.hex(),
+                        'checksum': chunk.checksum,
+                        'chunk_size': chunk.chunk_size
+                    }
                     
-                    # Sauvegarder le chunk
-                    chunk_file = os.path.join(file_temp_dir, f"{chunk_id}.txt")
-                    with open(chunk_file, 'w', encoding='utf-8') as f:
-                        f.write(chunk)
+                    with open(metadata_file, 'w', encoding='utf-8') as f:
+                        json.dump(chunk_metadata, f, indent=2, ensure_ascii=False)
                     
-                    chunks.append(chunk_file)
-                    chunk_metadata.append({
-                        'chunk_id': chunk_id,
-                        'chunk_file': chunk_file,
-                        'start_pos': i,
-                        'end_pos': min(i + chunk_size, len(content)),
-                        'size': len(chunk),
-                        'checksum': chunk_checksum
+                    chunk_files.append({
+                        'dna_file': dna_file,
+                        'metadata_file': metadata_file,
+                        'chunk': chunk
                     })
                 
-                logger.info(f"Segmentation terminée: {len(chunks)} chunks créés")
+                logger.info(f"✓ {len(dna_chunks)} chunks ADN sauvegardés")
                 
-                # Vérifier les chunks
-                all_valid = True
-                for chunk_info in chunk_metadata:
-                    chunk_file = chunk_info['chunk_file']
-                    expected_checksum = chunk_info['checksum']
-                    
-                    if os.path.exists(chunk_file):
-                        with open(chunk_file, 'r', encoding='utf-8') as f:
-                            chunk_content = f.read()
-                        
-                        actual_checksum = hashlib.md5(chunk_content.encode('utf-8')).hexdigest()
-                        if actual_checksum != expected_checksum:
-                            all_valid = False
-                            logger.error(f"ERREUR: Chunk {chunk_info['chunk_id']} - Checksum invalide!")
-                            break
+                # Test de reconstruction pour validation
+                reconstructed_text = dna_processor.encoder.reconstruct_text_from_chunks(dna_chunks)
                 
-                if not all_valid:
-                    raise Exception(f"Échec de la vérification des chunks pour {filename}")
-                
-                logger.info(f"✓ Vérification des chunks réussie pour {filename}")
-                
-                # Reconstruire le texte
-                sorted_chunks = sorted(chunk_metadata, key=lambda x: x['start_pos'])
-                reconstructed_content = ""
-                
-                for chunk_info in sorted_chunks:
-                    chunk_file = chunk_info['chunk_file']
-                    with open(chunk_file, 'r', encoding='utf-8') as f:
-                        chunk_content = f.read()
-                    reconstructed_content += chunk_content
-                
-                # Vérifier l'intégrité du texte reconstruit
-                reconstructed_checksum = hashlib.md5(reconstructed_content.encode('utf-8')).hexdigest()
-                
-                if reconstructed_checksum != original_checksum:
-                    raise Exception(f"Échec de la reconstruction pour {filename} - Checksums différents!")
-                
-                logger.info(f"✓ Reconstruction réussie pour {filename}")
-                
-                # Sauvegarder le résultat
+                # Sauvegarder le résultat final
                 output_filename = f"processed_{filename}"
                 output_file_path = os.path.join(OUTPUT_DIR, output_filename)
                 os.makedirs(OUTPUT_DIR, exist_ok=True)
                 
                 with open(output_file_path, 'w', encoding='utf-8') as f:
-                    f.write(reconstructed_content)
+                    f.write(reconstructed_text)
                 
-                logger.info(f"✓ Fichier traité sauvegardé: {output_file_path}")
+                # Créer un fichier de rapport ADN
+                dna_report_file = os.path.join(OUTPUT_DIR, f"dna_report_{filename}.json")
+                dna_report = {
+                    'original_file': filename,
+                    'file_hash': file_hash,
+                    'original_checksum': dna_result['original_checksum'],
+                    'reconstructed_checksum': dna_result['reconstructed_checksum'],
+                    'dna_chunks_count': dna_result['dna_chunks_count'],
+                    'total_dna_bases': dna_result['total_dna_bases'],
+                    'chunk_size': chunk_size,
+                    'error_correction_symbols': error_correction_symbols,
+                    'processing_timestamp': datetime.now().isoformat(),
+                    'chunks_info': [
+                        {
+                            'chunk_id': chunk.chunk_id,
+                            'index': chunk.index,
+                            'dna_length': len(chunk.dna_sequence),
+                            'checksum': chunk.checksum
+                        }
+                        for chunk in dna_chunks
+                    ]
+                }
+                
+                with open(dna_report_file, 'w', encoding='utf-8') as f:
+                    json.dump(dna_report, f, indent=2, ensure_ascii=False)
+                
+                logger.info(f"✓ Fichier ADN traité sauvegardé: {output_file_path}")
+                logger.info(f"✓ Rapport ADN créé: {dna_report_file}")
                 
                 return {
                     'filename': filename,
                     'file_hash': file_hash,
                     'output_file': output_file_path,
+                    'dna_report_file': dna_report_file,
+                    'dna_chunks_count': len(dna_chunks),
+                    'total_dna_bases': dna_result['total_dna_bases'],
                     'status': 'completed'
                 }
                 
@@ -620,12 +632,12 @@ def process_single_file(file_info, **context):
         # Marquer comme terminé
         update_file_status(file_hash, ProcessingStatus.COMPLETED, **context)
         
-        logger.info(f"✓ Traitement réussi pour {filename}")
+        logger.info(f"✓ Traitement ADN réussi pour {filename}")
         return result
         
     except Exception as e:
         circuit_breaker.record_failure()
-        error_msg = f"Erreur lors du traitement de {filename}: {str(e)}"
+        error_msg = f"Erreur lors du traitement ADN de {filename}: {str(e)}"
         logger.error(error_msg)
         
         # Marquer comme échoué
@@ -648,7 +660,8 @@ def setup_airflow_variables(**context):
     
     variables_to_set = {
         'input_directory': DEFAULT_INPUT_DIR,
-        'chunk_size': '100',
+        'chunk_size': '1000',
+        'error_correction_symbols': '10',
         'max_retries': '3',
         'circuit_breaker_threshold': '5'
     }
@@ -657,16 +670,32 @@ def setup_airflow_variables(**context):
     existing_variables = []
     
     for var_name, var_value in variables_to_set.items():
+        # Récupérer si existe, sinon None (idempotent)
+        existing_value = None
         try:
-            # Vérifier si la variable existe déjà
-            existing_value = Variable.get(var_name)
+            existing_value = Variable.get(var_name, default_var=None)
+        except Exception as e:
+            logger.warning(f"Lecture de variable échouée ({var_name}): {e}")
+            existing_value = None
+
+        if existing_value is None:
+            # Essayer de créer; ignorer si déjà créé en parallèle
+            try:
+                Variable.set(var_name, var_value)
+                created_variables.append(f"{var_name}={var_value}")
+                logger.info(f"Variable créée: {var_name} = {var_value}")
+            except Exception as e:
+                # Conflit d'unicité possible si autre worker l'a créée entre-temps
+                try:
+                    existing_value = Variable.get(var_name)
+                    existing_variables.append(f"{var_name}={existing_value}")
+                    logger.info(f"Variable existante (créée ailleurs): {var_name} = {existing_value}")
+                except Exception as e2:
+                    logger.error(f"Impossible d'initialiser la variable {var_name}: {e2}")
+                    raise
+        else:
             existing_variables.append(f"{var_name}={existing_value}")
             logger.info(f"Variable existante: {var_name} = {existing_value}")
-        except Exception:
-            # Créer la variable si elle n'existe pas
-            Variable.set(var_name, var_value)
-            created_variables.append(f"{var_name}={var_value}")
-            logger.info(f"Variable créée: {var_name} = {var_value}")
     
     return {
         'created_variables': created_variables,
