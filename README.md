@@ -264,6 +264,18 @@ Table `processed_files` avec colonnes :
 - [ ] **Compression Automatique** : Compression/décompression
 - [ ] **Tests Unitaires** : Suite de tests complète
 
+## Lien entre Biologie, Art et Data 
+
+Il existe un lien reliant la biologie, l’art et la donnée.
+
+Le lien entre biologie et data est immédiat. La biologie repose sur des séquences d’information transformées en matière. Là où un ordinateur code en 0 et 1, la vie le fait en A, C, G et T.
+
+Le lien entre art et data est plus discret. Paul Klee écrivait : « L’art ne reproduit pas le visible, il rend visible. ». Ainsi, l’art révèle les structures cachées du monde et les transforme en une expérience sensible.
+Là où la donnée mesure, l’art rend sensible.
+
+Ainsi, en liant biologie, art et data, il devient possible de créer des formes porteuses de sens cachés. Par exemple, en encodant un message dans une séquence d’ADN synthétique, puis en simulant la structure tridimensionnelle de la protéine correspondante, on obtient une forme dont la géométrie incarne littéralement le message.
+Le spectateur n’observe plus une image, mais une sculpture issue du vivant, un message enfoui dans la matière même de la vie.
+
 ## Licence
 
 Ce projet est sous licence MIT. 
